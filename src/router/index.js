@@ -49,7 +49,7 @@ export const ConstantRoutes = [{
   children: [{
     path: 'monitor',
     name: 'Monitor',
-    component: () => import('@/views/plug/headers'),
+    component: () => import('@/views/plug/monitor'),
     meta: { title: '自定义监控', icon: 'desktop' }
   }]
 },
@@ -60,7 +60,7 @@ export const ConstantRoutes = [{
   children: [{
     path: 'redirect',
     name: 'redirect',
-    component: () => import('@/views/plug/headers'),
+    component: () => import('@/views/plug/redirect'),
     meta: { title: 'URL重定向', icon: 'random' }
   }]
 },
@@ -71,7 +71,7 @@ export const ConstantRoutes = [{
   children: [{
     path: 'basic_auth',
     name: 'Basic_auth',
-    component: () => import('@/views/plug/headers'),
+    component: () => import('@/views/plug/basic_auth'),
     meta: { title: 'Basic Auth', icon: 'ban' }
   }]
 },
@@ -82,7 +82,7 @@ export const ConstantRoutes = [{
   children: [{
     path: 'key_auth',
     name: 'Key_auth',
-    component: () => import('@/views/plug/headers'),
+    component: () => import('@/views/plug/key_auth'),
     meta: { title: 'Key Auth', icon: 'key' }
   }]
 },
@@ -93,7 +93,7 @@ export const ConstantRoutes = [{
   children: [{
     path: 'jwt_auth',
     name: 'Jwt_auth',
-    component: () => import('@/views/plug/headers'),
+    component: () => import('@/views/plug/jwt_auth'),
     meta: { title: 'Jwt Auth', icon: 'map-signs' }
   }]
 },
@@ -104,7 +104,7 @@ export const ConstantRoutes = [{
   children: [{
     path: 'hmac_auth',
     name: 'Hmac_auth',
-    component: () => import('@/views/plug/headers'),
+    component: () => import('@/views/plug/hmac_auth'),
     meta: { title: 'Hmac Auth', icon: 'lock' }
   }]
 },
@@ -115,7 +115,7 @@ export const ConstantRoutes = [{
   children: [{
     path: 'signature_auth',
     name: 'Signature_auth',
-    component: () => import('@/views/plug/headers'),
+    component: () => import('@/views/plug/signature_auth'),
     meta: { title: 'Signature Auth', icon: 'minus-circle' }
   }]
 },
@@ -126,7 +126,7 @@ export const ConstantRoutes = [{
   children: [{
     path: 'rate_limiting',
     name: 'Rate_limiting',
-    component: () => import('@/views/plug/headers'),
+    component: () => import('@/views/plug/rate_limiting'),
     meta: { title: 'Rate Limiting', icon: 'filter' }
   }]
 },
@@ -137,7 +137,7 @@ export const ConstantRoutes = [{
   children: [{
     path: 'property_rate_limiting',
     name: 'Property_rate_limiting',
-    component: () => import('@/views/plug/headers'),
+    component: () => import('@/views/plug/property_rate_limiting'),
     meta: { title: 'Property Rate Limiting', icon: 'filter' }
   }]
 },
@@ -148,7 +148,7 @@ export const ConstantRoutes = [{
   children: [{
     path: 'waf',
     name: 'Waf',
-    component: () => import('@/views/plug/headers'),
+    component: () => import('@/views/plug/waf'),
     meta: { title: 'WAF', icon: 'exclamation-triangle' }
   }]
 },
@@ -159,19 +159,8 @@ export const ConstantRoutes = [{
   children: [{
     path: 'divide',
     name: 'Divide',
-    component: () => import('@/views/plug/headers'),
+    component: () => import('@/views/plug/divide'),
     meta: { title: '代理&分流', icon: 'arrows-alt' }
-  }]
-},
-{
-  path: '/',
-  component: Layout,
-  redirect: '/kvstore',
-  children: [{
-    path: 'kvstore',
-    name: 'Kvstore',
-    component: () => import('@/views/plug/headers'),
-    meta: { title: 'KVStore', icon: 'th' }
   }]
 },
 {

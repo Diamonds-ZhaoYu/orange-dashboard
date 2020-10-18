@@ -19,7 +19,7 @@
     />
 </template>
 <script>
-import * as $http from '@/api/headers'
+import * as $http from '@/api/rate_limiting'
 import { PlugMain } from './components'
 export default {
   name: 'Headers',
@@ -58,7 +58,7 @@ export default {
       })
     },
     enablePlug(self, params) {
-      $http.enablePlug(params).then(response => {
+      $http.enablePlug().then(response => {
         self.enablePlug(response)
         if (response.data.success) {
           self.dialogPlugVisible = false

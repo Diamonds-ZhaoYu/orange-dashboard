@@ -19,7 +19,7 @@
     />
 </template>
 <script>
-import * as $http from '@/api/headers'
+import * as $http from '@/api/signature_auth'
 import { PlugMain } from './components'
 export default {
   name: 'Headers',

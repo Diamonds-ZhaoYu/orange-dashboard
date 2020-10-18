@@ -3,8 +3,9 @@
     <el-row>
         <el-col :span="12"  :offset="14">
             <el-button icon="el-icon-tickets" @click="handleVisible">{{buttonViewTitle}}</el-button>
-            <el-button type="primary" @click="dialogPlugVisible = true" icon="el-icon-caret-right">启动该插件</el-button>
-            <el-button icon="el-icon-menu" @click="dialogAddPlugVisible = true">添加选择器</el-button>
+            <el-button v-show="enable" type="primary" style="background-color: red" @click="dialogPlugVisible = true" icon="el-icon-d-arrow-right">{{plugBthTitle}}</el-button>
+            <el-button v-show="enable === false" type="primary" @click="dialogPlugVisible = true" icon="el-icon-caret-right">{{plugBthTitle}}</el-button>
+            <el-button icon="el-icon-menu" @click="showDialogAddPlugVisible">添加选择器</el-button>
             <el-button icon="el-icon-refresh" @click="handleSyncShow">同步配置</el-button>
         </el-col>
     </el-row>
@@ -14,15 +15,15 @@
                <div>
                    <h1 class="m-xs">选择器列表</h1>
                    <span class="no-margins"><v-icon name="hand-pointer" /> 拖动改变执行顺序</span>
-                   <el-button icon="el-icon-menu" @click="oderSelectors">保存排序</el-button>
+                   <el-button style="float: right;padding: 5px 5px;" icon="el-icon-menu" @click="oderSelectors">保存排序</el-button>
                </div>
-               <ul style="padding-inline-start:0px">
-                    <li class="plug-selectors-item" v-for="child in selectors" :key="child.id" @click="selectPlug(child)" >
+               <ul style="padding-inline-start: 0px" @dragstart="onDragStart" @dragover="onDragOver" @dragend="onDragEnd" ref="parentNode">
+                    <li draggable="true" class="plug-selectors-item" v-for="child in selectors" :id="child.id" :key="child.id" @click="selectPlug(child)" >
                         <h6 class="plug-selectors-item-title">{{child.name}}</h6>
                         <div>
                             <b class="plug-selectors-item-time"><v-icon style="width: 13px;height: 13px;" name="regular/clock" /> {{child.time}}</b>
                             <el-button class="plug-selectors-item-button" @click="delSelectors(child)">删除</el-button>
-                            <el-button class="plug-selectors-item-button">编辑</el-button>
+                            <el-button class="plug-selectors-item-button" @click="editSelectors(child)">编辑</el-button>
                         </div>
                     </li>
                </ul>
@@ -33,14 +34,16 @@
               <div>
                   <h1 class="m-xs">选择器{{selectName}}规则列表</h1>
                   <span class="no-margins"><v-icon name="hand-pointer" /> 在列表之间拖动以改变规则顺序</span>
-                  <el-button icon="el-icon-menu" @click="orderRules">保存排序</el-button>
-                  <el-button icon="el-icon-menu" @click="dialogAddPlugRulesVisible = true">添加规则</el-button>
-              </div>
-              <ul style="padding-inline-start:0px">
-                  <div v-show="rulesData.length === 0" class="alert alert-warning" style="margin: 25px 0 10px 0;">
-                      <p class="p-class">该选择器下没有规则,请添加!</p>
+                  <div style="float: right">
+                      <el-button style="padding: 5px 5px;" icon="el-icon-menu" @click="orderRules">保存排序</el-button>
+                      <el-button style="padding: 5px 5px;" icon="el-icon-menu" @click="showDialogAddPlugRulesVisible">添加规则</el-button>
                   </div>
-                  <li class="plug-selectors-item" :class="{'info-element':item.enable}" v-for="item in rulesData" :key="item.id">
+              </div>
+              <div v-show="rulesData.length === 0" class="alert alert-warning" style="margin: 25px 0 10px 0;">
+                  <p class="p-class">该选择器下没有规则,请添加!</p>
+              </div>
+              <ul style="padding-inline-start:0px" @dragstart="onDragRulesStart" @dragover="onDragRulesOver" @dragend="onDragRulesEnd" ref="parentRulesNode">
+                  <li draggable="true" class="plug-selectors-item" :class="{'info-element':item.enable}" :id="item.id" v-for="item in rulesData" :key="item.id">
                       <table class="table table-hover single-rule-table">
                           <tbody>
                             <tr>
@@ -88,7 +91,7 @@
                                     <small>{{item.time}}</small>
                                 </td>
                                 <td class="center rule-op-td">
-                                    <el-button class="plug-selectors-item-button">编辑</el-button>
+                                    <el-button class="plug-selectors-item-button" @click="editRules(item)">编辑</el-button>
                                     <el-button class="plug-selectors-item-button" @click="delRules(item)">删除</el-button>
                                 </td>
                             </tr>
@@ -141,7 +144,7 @@
                 </el-select>
             </el-form-item>
             <el-form-item label="规则" v-show="form.type === 1">
-                <el-select v-model="form.judgeType" placeholder="请选择规则">
+                <el-select v-model="form.judge.type" placeholder="请选择规则">
                     <el-option
                             v-for="item in ruleJudgeTypes"
                             :key="item.key"
@@ -149,9 +152,9 @@
                             :value="item.key">
                     </el-option>
                 </el-select>
-                <el-input v-show="form.judgeType === 3" v-model="form.expression" style="width: 280px" placeholder="规则表达式，示例：(v[1] or v[2]) and v[3]"></el-input>
+                <el-input v-show="form.judge.type === 3" v-model="form.expression" style="width: 280px" placeholder="规则表达式，示例：(v[1] or v[2]) and v[3]"></el-input>
                 <ul style="padding-inline-start:0px" class="conditions-row">
-                    <li v-for="(conditions, index) in form.conditions" :key="index">
+                    <li v-for="(conditions, index) in form.judge.conditions" :key="index">
                         <el-select v-model="conditions.type" placeholder="请选择规则">
                             <el-option
                                     v-for="item in conditionTypes"
@@ -170,18 +173,19 @@
                         </el-select>
                         <el-input v-model="conditions.value" placeholder="value" style="width: 30%"></el-input>
                         <i
+                         v-show="form.judge.type !== 0"
                          class="el-icon-plus"
-                         @click="form.conditions.push({
+                         @click="form.judge.conditions.push({
                             type: 'URI',
                             operator: 'match',
                             value: ''
                          })"></i>
-                        <i class="el-icon-close"  @click="form.conditions.length > 1 && form.conditions.splice(index, 1)"></i>
+                        <i v-show="form.judge.type !== 0" class="el-icon-close"  @click="form.judge.conditions.length > 1 && form.judge.conditions.splice(index, 1)"></i>
                     </li>
                 </ul>
             </el-form-item>
             <el-form-item label="处理">
-                <el-select v-model="form.handleContinue" placeholder="请选择处理方式">
+                <el-select v-model="form.handle.continue" placeholder="请选择处理方式">
                     <el-option
                             v-for="item in selectorContinues"
                             :key="item.key"
@@ -189,7 +193,7 @@
                             :value="item.key">
                     </el-option>
                 </el-select>
-                <el-select prop="handleLog" v-model="form.handleLog" placeholder="请选择日志处理">
+                <el-select prop="handleLog" v-model="form.handle.log" placeholder="请选择日志处理">
                     <el-option
                             v-for="item in selectorLogs"
                             :key="item.key"
@@ -204,6 +208,7 @@
         </el-form>
         <span slot="footer" class="dialog-footer">
          <el-button @click="dialogAddPlugVisible = false">取 消</el-button>
+         <el-button @click="showViewData(form)">预 览</el-button>
          <el-button type="primary" @click="submitForm">确定</el-button>
         </span>
     </el-dialog>
@@ -249,13 +254,14 @@
                       </el-select>
                       <el-input v-model="conditions.value" placeholder="value" style="width: 30%"></el-input>
                       <i
+                              v-show="formRules.judge.type !== 0"
                               class="el-icon-plus"
                               @click="formRules.judge.conditions.push({
                         type: 'URI',
                         operator: 'match',
                         value: ''
                      })"></i>
-                      <i class="el-icon-close"  @click="formRules.judge.conditions.length > 1 && formRules.judge.conditions.splice(index, 1)"></i>
+                      <i v-show="formRules.judge.type !== 0" class="el-icon-close"  @click="formRules.judge.conditions.length > 1 && formRules.judge.conditions.splice(index, 1)"></i>
                   </li>
               </ul>
           </el-form-item>
@@ -359,7 +365,7 @@
       </el-form>
       <span slot="footer" class="dialog-footer">
          <el-button @click="dialogAddPlugRulesVisible = false">取 消</el-button>
-         <el-button >预 览</el-button>
+         <el-button @click="showViewData(formRules)">预 览</el-button>
          <el-button type="primary" @click="submitRuleForm">确定</el-button>
       </span>
     </el-dialog>
@@ -374,6 +380,16 @@
      <el-button @click="dialogVisible = false">取 消</el-button>
      <el-button type="primary" @click="handleSyncData">确定同步</el-button>
     </span>
+    </el-dialog>
+    <el-dialog
+          title="规则预览"
+          :visible.sync="dialogViewVisible"
+          width="30%"
+          :before-close="handleClose">
+      <json-viewer class="json-viewer" :value="viewData" :expand-depth=4 sort></json-viewer>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogViewVisible = false">返 回</el-button>
+      </span>
     </el-dialog>
   </div>
 </template>
@@ -393,27 +409,39 @@ export default {
   props: ['titileName'],
   data() {
     return {
+      plugBthTitle: '',
+      draging: null,
+      target: null,
+      orderSelectors: [],
       selectors: [],
+      orderRulesData: [],
       rulesData: [],
       selectName: '-',
       selectorId: '',
+      editMode: 1,
+      editRulesMode: 1,
+      enable: false,
       form: {
+        id: '',
         name: '',
         type: 0,
-        judgeType: 0,
-        conditions: [
-          {
+        judge: {
+          type: 0,
+          conditions: [{
             type: 'URI',
             operator: 'match',
             value: ''
-          }
-        ],
+          }]
+        },
         expression: '',
-        handleLog: false,
-        handleContinue: true,
+        handle: {
+          continue: false,
+          log: false
+        },
         enable: false
       },
       formRules: {
+        id: '',
         name: '',
         judge: {
           type: 0,
@@ -456,7 +484,9 @@ export default {
       dialogPlugVisible: false,
       dialogAddPlugVisible: false,
       dialogAddPlugRulesVisible: false,
+      dialogViewVisible: false,
       syncData: '',
+      viewData: '',
       initData: '',
       buttonViewTitle: '数据视图',
       conditionTypes: [
@@ -605,62 +635,87 @@ export default {
   },
   created() {
     this.handleInitData()
-    console.log(this.formRules)
+  },
+  mounted() {
+    document.body.ondrop = function(event) {
+      event.preventDefault()
+      event.stopPropagation()
+    }
   },
   methods: {
     submitForm() {
       this.$refs.form.validate(async valid => {
         if (valid) {
-          const { name, type, judgeType, conditions, expression, handleLog, handleContinue, enable } = this.form
-          const contentObj = {
+          const { id, name, type, judge, expression, handle, enable } = this.form
+          let contentObj = {
             'name': name,
             'type': type,
-            'judge': {
-              'type': judgeType,
-              'expression': expression,
-              'conditions': conditions
-            },
-            'handle': {
-              'continue': handleContinue,
-              'log': handleLog
-            },
+            'judge': judge,
+            'handle': handle,
             'enable': enable
           }
-
+          if (this.editMode !== 1) {
+            contentObj = {
+              'id': id,
+              'name': name,
+              'type': type,
+              'judge': judge,
+              'handle': handle,
+              'enable': enable
+            }
+          }
           if (type === 1) {
-            if (!Array.isArray(conditions)) {
+            if (!Array.isArray(judge.conditions)) {
               this.$message.error('conditions是数组')
               return
             }
 
-            if (judgeType === 0 && conditions.length > 1) {
+            if (judge.type === 0 && judge.conditions.length > 1) {
               this.$message.error('单一条件匹配只能填写一条规则')
               return
             }
-            if (judgeType !== 0 && conditions.length === 1) {
+            if (judge.type !== 0 && judge.conditions.length === 1) {
               this.$message.error('AND/OR/复杂匹配，需填写多条规则')
               return
             }
             contentObj.judge = {
-              type: judgeType,
-              conditions
+              type: judge.type,
+              conditions: judge.conditions
             }
 
-            if (judgeType === 3) {
+            if (judge.type === 3) {
               contentObj.judge.expression = expression
             }
           } else if (type === 0) {
             contentObj.judge = {}
           }
-          this.$emit('addSelectors', this, JSON.stringify(contentObj))
+          if (this.editMode === 1) {
+            this.$emit('addSelectors', this, JSON.stringify(contentObj))
+          } else {
+            this.$emit('updateSelectors', this, JSON.stringify(contentObj))
+          }
         }
       })
+    },
+    showDialogAddPlugVisible() {
+      this.dialogAddPlugVisible = true
+      this.editMode = 1
+      this.resetForm()
+    },
+    showDialogAddPlugRulesVisible() {
+      if (this.selectorId === '' || this.selectorId === null) {
+        this.$message.error('请选择选择器！')
+        return
+      }
+      this.dialogAddPlugRulesVisible = true
+      this.editRulesMode = 1
+      this.resetRulesForm()
     },
     submitRuleForm() {
       this.$refs.formRules.validate(async valid => {
         if (valid) {
-          const { name, judge, handle, extractor, headers, enable } = this.formRules
-          const contentObj = {
+          const { id, name, judge, handle, extractor, headers, enable } = this.formRules
+          let contentObj = {
             'name': name,
             'judge': judge,
             'handle': handle,
@@ -668,7 +723,23 @@ export default {
             'headers': headers,
             'enable': enable
           }
-          this.$emit('addRules', this, this.selectorId, JSON.stringify(contentObj))
+          if (this.editRulesMode === 2) {
+            contentObj = {
+              'id': id,
+              'name': name,
+              'judge': judge,
+              'handle': handle,
+              'extractor': extractor,
+              'headers': headers,
+              'enable': enable
+            }
+          }
+
+          if (this.editRulesMode === 1) {
+            this.$emit('addRules', this, this.selectorId, JSON.stringify(contentObj))
+          } else {
+            this.$emit('updateRules', this, this.selectorId, JSON.stringify(contentObj))
+          }
         }
       })
     },
@@ -676,22 +747,27 @@ export default {
       this.form = {
         name: '',
         type: 0,
-        judgeType: 0,
-        conditions: [
-          {
-            type: 'URI',
-            operator: 'match',
-            value: ''
-          }
-        ],
+        judge: {
+          type: 0,
+          conditions: [
+            {
+              type: 'URI',
+              operator: 'match',
+              value: ''
+            }
+          ]
+        },
         expression: '',
-        handleLog: false,
-        handleContinue: true,
+        handle: {
+          continue: false,
+          log: false
+        },
         enable: false
       }
     },
     resetRulesForm() {
       this.formRules = {
+        id: '',
         name: '',
         judge: {
           type: 0,
@@ -723,6 +799,28 @@ export default {
         this.buttonViewTitle = '表格视图'
       }
     },
+    getSelectors(response) {
+      if (response.data.data.enable === true) {
+        this.plugBthTitle = '停用该插件'
+      } else {
+        this.plugBthTitle = '启用该插件'
+      }
+      console.log(response.data.data.enable)
+      this.enable = response.data.data.enable
+      this.initData = response.data.data
+      this.orderSelectors = response.data.data.meta
+      if (this.orderSelectors.selectors) {
+        var arraySelectors = {}
+        for (var i = 0; i < this.orderSelectors.selectors.length; i++) {
+          arraySelectors[this.orderSelectors.selectors[i]] = response.data.data.selectors[this.orderSelectors.selectors[i]]
+        }
+        this.selectors = arraySelectors
+        this.selectPlug(response.data.data.selectors[this.orderSelectors.selectors[0]])
+      }
+    },
+    getRules(response) {
+      this.rulesData = response.data.data.rules
+    },
     handleInitData() {
       this.$emit('getSelectors', this)
     },
@@ -733,7 +831,19 @@ export default {
       this.$emit('fetchConfig', this)
     },
     handleEnable() {
-      this.$emit('enablePlug', this)
+      var eb = this.enable === true ? 0 : 1
+      this.$emit('enablePlug', this, eb)
+    },
+    enablePlug(response) {
+      if (response.data.success) {
+        if (this.enable) {
+          this.enable = false
+          this.plugBthTitle = '启动该插件'
+        } else {
+          this.enable = true
+          this.plugBthTitle = '停用该插件'
+        }
+      }
     },
     selectPlug(data) {
       this.selectName = '【' + data.name + '】'
@@ -748,21 +858,113 @@ export default {
     delSelectors(data) {
       this.$emit('delSelectors', this, data.id)
     },
+    editSelectors(data) {
+      this.$emit('editSelectors', this, data)
+    },
     delRules(data) {
       this.$emit('delRules', this, this.selectorId, data.id)
     },
+    editRules(data) {
+      this.$emit('editRules', this, this.selectorId, data)
+    },
     oderSelectors() {
-      this.$emit('oderSelectors', this, Object.keys(this.selectors).join(','))
+      const currentNodes = Array.from(this.$refs.parentNode.childNodes)
+      const data = currentNodes.map((i, index) => {
+        const item = i.id
+        return item
+      })
+      if (data.length > 0) {
+        this.$emit('oderSelectors', this, data.join(','))
+      } else {
+        this.$message.error('没有数据！')
+      }
     },
     orderRules() {
-      var arr = []
-      for (var rules in this.rulesData) {
-        arr[rules] = this.rulesData[rules].id
+      const self = this.rulesData
+      console.log(self)
+      const currentNodes = Array.from(this.$refs.parentRulesNode.childNodes)
+      const data = currentNodes.map((i, index) => {
+        const item = i.id
+        return item
+      })
+      if (data.length > 0) {
+        this.$emit('orderRules', this, this.selectorId, data.join(','))
+      } else {
+        this.$message.error('名称不能为空！')
       }
-      this.$emit('orderRules', this, this.selectorId, arr.join(','))
     },
     handleClose(done) {
       done()
+    },
+    showViewData(data) {
+      if (data.name === '' || data.name == null) {
+        this.$message.error('名称不能为空！')
+        return
+      }
+      this.dialogViewVisible = true
+      this.viewData = data
+    },
+    onDragStart(event) {
+      console.log('drag start')
+      this.draging = event.target
+    },
+    onDragOver(event) {
+      console.log('drag move')
+      this.target = event.target
+      if (this.target.nodeName === 'LI' && this.target !== this.draging) {
+        if (this._index(this.draging) < this._index(this.target)) {
+          this.target.parentNode.insertBefore(this.draging, this.target.nextSibling)
+        } else {
+          this.target.parentNode.insertBefore(this.draging, this.target)
+        }
+      }
+    },
+    onDragEnd(event) {
+      console.log('drag end')
+      const currentNodes = Array.from(this.$refs.parentNode.childNodes)
+      const self = this.selectors
+      console.log(self)
+      const data = currentNodes.map((i, index) => {
+        const item = self[i.id]
+        console.log(item)
+        return item
+      })
+      console.log(data)
+    },
+    _index(el) {
+      const domData = Array.from(this.$refs.parentNode.childNodes)
+      return domData.findIndex(i => i.innerText === el.innerText)
+    },
+    onDragRulesStart(event) {
+      console.log('drag start')
+      this.draging = event.target
+    },
+    onDragRulesOver(event) {
+      console.log('drag move')
+      this.target = event.target
+      if (this.target.nodeName === 'LI' && this.target !== this.draging) {
+        if (this._indexRules(this.draging) < this._indexRules(this.target)) {
+          this.target.parentNode.insertBefore(this.draging, this.target.nextSibling)
+        } else {
+          this.target.parentNode.insertBefore(this.draging, this.target)
+        }
+      }
+    },
+    onDragRulesEnd(event) {
+      console.log('drag end')
+      const currentNodes = Array.from(this.$refs.parentRulesNode.childNodes)
+      const self = this.rulesData
+      console.log(self)
+      const data = currentNodes.map((i, index) => {
+        const item = self[index]
+        console.log(item)
+        return item
+      })
+      console.log(data)
+    },
+    _indexRules(el) {
+      const domData = Array.from(this.$refs.parentRulesNode.childNodes)
+      return domData.findIndex(i => i.innerText === el.innerText)
     }
   }
 }

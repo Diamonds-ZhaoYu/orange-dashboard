@@ -2,7 +2,7 @@ import request from '@/utils/request'
 
 export function getSelectors(params) {
   return request({
-    url: '/headers/selectors?t=' + (new Date()).getTime(),
+    url: '/monitor/selectors?t=' + (new Date()).getTime(),
     method: 'GET',
     params
   })
@@ -10,7 +10,7 @@ export function getSelectors(params) {
 
 export async function addSelectors(params) {
   return request({
-    url: '/headers/selectors?t=' + (new Date()).getTime(),
+    url: '/monitor/selectors?t=' + (new Date()).getTime(),
     method: 'POST',
     data: 'selector=' + params
   })
@@ -18,7 +18,7 @@ export async function addSelectors(params) {
 
 export async function updateSelectors(params) {
   return request({
-    url: '/headers/selectors?t=' + (new Date()).getTime(),
+    url: '/monitor/selectors?t=' + (new Date()).getTime(),
     method: 'PUT',
     data: { 'selector': params }
   })
@@ -26,7 +26,7 @@ export async function updateSelectors(params) {
 
 export async function deleteSelectors(params) {
   return request({
-    url: '/headers/selectors?t=' + (new Date()).getTime(),
+    url: '/monitor/selectors?t=' + (new Date()).getTime(),
     method: 'DELETE',
     data: { 'selector_id': params }
   })
@@ -34,7 +34,7 @@ export async function deleteSelectors(params) {
 
 export async function addRules(selectorsId, params) {
   return request({
-    url: '/headers/selectors/' + selectorsId + '/rules?t=' + (new Date()).getTime(),
+    url: '/monitor/selectors/' + selectorsId + '/rules?t=' + (new Date()).getTime(),
     method: 'POST',
     data: 'rule=' + params
   })
@@ -42,7 +42,7 @@ export async function addRules(selectorsId, params) {
 
 export async function updateRules(selectorsId, params) {
   return request({
-    url: '/headers/selectors/' + selectorsId + '/rules?t=' + (new Date()).getTime(),
+    url: '/monitor/selectors/' + selectorsId + '/rules?t=' + (new Date()).getTime(),
     method: 'PUT',
     data: { 'rule': params }
   })
@@ -50,7 +50,7 @@ export async function updateRules(selectorsId, params) {
 
 export async function deleteRules(selectorsId, params) {
   return request({
-    url: '/headers/selectors/' + selectorsId + '/rules?t=' + (new Date()).getTime(),
+    url: '/monitor/selectors/' + selectorsId + '/rules?t=' + (new Date()).getTime(),
     method: 'DELETE',
     data: { 'rule_id': params }
   })
@@ -58,7 +58,7 @@ export async function deleteRules(selectorsId, params) {
 
 export async function oderSelectors(params) {
   return request({
-    url: '/headers/selectors/order?t=' + (new Date()).getTime(),
+    url: '/monitor/selectors/order?t=' + (new Date()).getTime(),
     method: 'PUT',
     data: 'order=' + params
   })
@@ -66,7 +66,7 @@ export async function oderSelectors(params) {
 
 export async function orderRules(selectorsId, params) {
   return request({
-    url: '/headers/selectors/' + selectorsId + '/rules/order?t=' + (new Date()).getTime(),
+    url: '/monitor/selectors/' + selectorsId + '/rules/order?t=' + (new Date()).getTime(),
     method: 'PUT',
     data: 'order=' + params
   })
@@ -74,7 +74,7 @@ export async function orderRules(selectorsId, params) {
 
 export function fetchConfig(params) {
   return request({
-    url: '/headers/fetch_config?t=' + (new Date()).getTime(),
+    url: '/monitor/fetch_config?t=' + (new Date()).getTime(),
     method: 'GET',
     params
   })
@@ -82,7 +82,7 @@ export function fetchConfig(params) {
 
 export function enablePlug(params) {
   return request({
-    url: '/headers/enable?t=' + (new Date()).getTime(),
+    url: '/monitor/enable?t=' + (new Date()).getTime(),
     method: 'POST',
     data: 'enable=' + params
   })
@@ -90,14 +90,14 @@ export function enablePlug(params) {
 
 export async function syncPlugData() {
   return request({
-    url: '/headers/sync?t=' + (new Date()).getTime(),
+    url: '/monitor/sync?t=' + (new Date()).getTime(),
     method: 'POST'
   })
 }
 
 export function getRules(params) {
   return request({
-    url: '/headers/selectors/' + params + '/rules?t=' + (new Date()).getTime(),
+    url: '/monitor/selectors/' + params + '/rules?t=' + (new Date()).getTime(),
     method: 'GET',
     params
   })

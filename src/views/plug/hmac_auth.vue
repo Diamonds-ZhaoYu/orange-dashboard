@@ -19,7 +19,7 @@
     />
 </template>
 <script>
-import * as $http from '@/api/headers'
+import * as $http from '@/api/hmac_auth'
 import { PlugMain } from './components'
 export default {
   name: 'Headers',
@@ -57,8 +57,8 @@ export default {
         self.syncData = response.data.data
       })
     },
-    enablePlug(self, params) {
-      $http.enablePlug(params).then(response => {
+    enablePlug(self) {
+      $http.enablePlug().then(response => {
         self.enablePlug(response)
         if (response.data.success) {
           self.dialogPlugVisible = false

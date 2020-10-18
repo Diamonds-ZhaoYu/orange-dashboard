@@ -19,7 +19,7 @@
     />
 </template>
 <script>
-import * as $http from '@/api/headers'
+import * as $http from '@/api/redirect'
 import { PlugMain } from './components'
 export default {
   name: 'Headers',
@@ -75,7 +75,7 @@ export default {
     },
     getRules(self, id) {
       $http.getRules(id).then(response => {
-        self.getRules(response)
+        self.rulesData = response.data.data.rules
       })
     },
     delSelectors(self, id) {
